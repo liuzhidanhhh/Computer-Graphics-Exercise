@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>图形学大作业</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<script type="text/javascript" src="jquery-2.1.4.min.js"></script>
+	<script src="colpick.js"></script>
+	<link href="colpick.css" rel="stylesheet">
+
+</head>
+<body>
+<h1>图形学大作业</h1>
+<div id="choose_algo" >
+	<h3>算法选择</h3>
+	<button id="dda" >DDA line</button>
+	<button id="bresenham" >bresenham line</button>
+	<button id="circle" >中点圆算法</button>
+	<button id="ecllipse">中点椭圆算法</button>
+</div>
+
+<div id='forms'>
+</div>
+
+<canvas id="canvas">
+</canvas> 
+
+<script type="text/javascript">
+	document.getElementById('canvas').width=500;
+	document.getElementById('canvas').height=500;
+	var c=document.getElementById('canvas');
+	var can=c.getContext('2d');
+	can.translate(0.5,0.5);
+	var height=c.height;
+	var width=c.width;
+	var center_y=height/2
+	var center_x=width/2
+
+	function coordinate(){
+		can.lineWidth=1;
+		can.strokeStyle='black'
+		var left=width*0.1
+		var right=width*0.9
+		var top=height*0.1
+		var bottom=height*0.9
+		
+		//x
+		can.moveTo(left,center_y)
+		can.lineTo(right,center_y);
+		can.lineTo(right-3,center_y-3)
+		can.moveTo(right,center_y)
+		can.lineTo(right-3,center_y+3)
+		can.lineJoin='round'
+		can.stroke();
+
+		//y	
+		can.beginPath();
+		can.moveTo(center_x,bottom)
+		can.lineTo(center_x,top)
+		can.lineTo(center_x-3,top+3);
+		can.moveTo(center_x,top);
+		can.lineTo(center_x+3,top+3)
+		can.lineJoin='round'
+		//axis
+		can.font='15px Arial'
+		can.fillText('X',right+10,center_y)
+		can.fillText('Y',center_x-5,top-10)
+		can.font='12px Arial'
+		for (var i = left+50; i<right; i+=50) {
+			can.moveTo(i,center_y);
+			can.lineTo(i,center_y-10);
+			x=i-250;
+			can.fillText(x,i,center_y+15)
+		}
+		for (var i = bottom-50; i>top; i-=50) {
+			can.moveTo(center_x,i);
+			can.lineTo(center_x+10,i);
+			x=-i+250;
+			if(x!=0){
+				can.fillText(x,center_x-25,i)
+			}
+		}
+		can.stroke();
+	}
+	
+	function clear(){
+		document.getElementById('canvas').width=500;
+		document.getElementById('canvas').height=500;
+		var c=document.getElementById('canvas');
+		var can=c.getContext('2d');
+		can.fillStyle="#000000"
+		can.beginPath();
+		can.clearRect=(0,0,width,height);
+		can.stroke();
+		coordinate();	
+	}
+
+	function ddaline(x0,y0,xe,ye,linewidth,color){
+		clear();
+		can.beginPath();
+		can.lineWidth=linewidth;
+		can.strokeStyle=color;
+		can.moveTo((parseFloat(x0)+parseFloat(center_x)),(parseFloat(-y0)+parseFloat(center_y)));
+		if(x0>xe){
+			var temp=x0
+			x0=xe
+			xe=temp
+			var te=y0
+			y0=ye
+			ye=te
+		}
+		if(x0==xe){
+			var i=-y0;
+			var t=setInterval(function(){
+					i--;
+					x=parseFloat(x0)+parseFloat(center_x);
+					y=i+parseFloat(center_y);
+					can.lineTo(x,y);
+					can.stroke();
+					if(i<(-ye)){
+						clearInterval(t)
+						t=null;
+					}
+				},50)
+		}
+		else{	
+			var dx=xe-x0;
+			var dy=ye-y0;
+			var m=dy/dx
+			var y=parseFloat(y0);
+			var x=parseFloat(x0);
+			if(Math.abs(m)<=1){
+				var t=setInterval(function(){
+					y=parseFloat(y+m);
+					x=parseFloat(x+1);
+					can.lineTo((x+parseFloat(center_x)),(-Math.round(y)+parseFloat(center_y)));
+					can.stroke();
+					if(x>xe){
+						clearInterval(t)
+						t=null;
+					}
+				},50)
+			}
+			else{
+				var i=-y0;
+				var t=setInterval(function(){
+					i--;
+					x=parseFloat(x+1/m);
+					can.lineTo((Math.round(x)+parseFloat(center_x)),(i+parseFloat(center_y)));
+					can.stroke();
+					if (i<-ye) {
+						clearInterval(t)
+						t=null;
+					}
+				},50)
+			}
+
+		}
+	}
+	
+	function bresenham(x0,y0,xe,ye,linewidth,color){
+		can.beginPath();
+		can.lineWidth=linewidth;
+		can.strokeStyle=color;
+		can.moveTo((parseFloat(x0)+parseFloat(center_x)),(parseFloat(-y0)+parseFloat(center_y)));
+		//moveTo(x0,y0)
+		if(x0>xe){
+			var temp=x0
+			x0=xe
+			xe=temp
+			var te=y0
+			y0=ye
+			ye=te
+		}
+		if(x0==xe){
+			var i=-y0;
+			var t=setInterval(function(){
+				i--;
+				x=parseFloat(x0)+parseFloat(center_x);
+				y=i+parseFloat(center_y);
+				can.lineTo(x,y);
+				can.stroke();
+				if(i<(-ye)){
+					clearInterval(t)
+					t=null;
+				}
+			},50)
+			
+		}
+		else{	
+			var dx=Math.abs(xe-x0);
+			var dy=Math.abs(ye-y0);
+			var m=(ye-y0)/(xe-x0);
+			var y=parseFloat(y0);
+			var x=parseFloat(x0);
+			if((m<=1)&&(m>=0)){
+				var ddy=2*dy;
+				var ddxy=ddy-2*dx;
+				var p=ddy-dx;
+				var i=x0;
+				var t=setInterval(function(){
+					i++;
+					if(p<0){
+						can.lineTo(parseFloat(center_x)+parseFloat(i),parseFloat(center_y)-y);
+						p=p+ddy;
+					}
+					else{
+						y=y+1
+						can.lineTo(parseFloat(center_x)+parseFloat(i),parseFloat(center_y)-y);
+						p=p+ddxy;
+					}
+					can.stroke();
+					if(i>xe){
+						clearInterval(t)
+						t=null;
+					}
+
+				},50)
+			}
+			else if(m<0 &&m>=(-1)){
+				//alert('jhhh')
+				//var y=y;
+				console.log(y)
+				var ddy=2*dy;
+				var ddxy=ddy-2*dx;
+				var p=ddy-dx;
+				var i=x0;
+				var t=setInterval(function(){
+					i++;
+					if(p<0){
+						can.lineTo(parseFloat(center_x)+parseFloat(i),parseFloat(center_y)-y);
+						p=p+ddy;
+					}
+					else{
+						y=y-1;
+						console.log(y)
+						can.lineTo(parseFloat(center_x)+parseFloat(i),parseFloat(center_y)-y);
+						p=p+ddxy;
+					}
+					can.stroke();
+					if(i>xe){
+						clearInterval(t)
+						t=null;
+					}
+
+				},50)
+			}
+			else if(m>1) {
+				var ddx=2*dx;
+				var ddxy=ddx-2*dy;
+				var p=ddx-dy;
+				var i=-y0;
+				var t=setInterval(function(){
+					i--;
+					if(p<0){
+						can.lineTo(parseFloat(center_x)+x,parseFloat(center_y)+parseFloat(i));
+						p=p+ddx;
+					}
+					else{
+						x=x+1;
+						can.lineTo(parseFloat(center_x)+x,parseFloat(center_y)+i);
+						p=p+ddxy;
+					}
+					can.stroke();
+					if(i<(-ye)){
+						clearInterval(t)
+						t=null;
+					}
+				},50)
+			}
+			else{
+				alert('hhh')
+				var ddx=2*dx;
+				var ddxy=ddx-2*dy;
+				var p=ddx-dy;
+				var i=-y0;
+				var t=setInterval(function(){
+					i++;
+					if(p<0){
+						can.lineTo(parseFloat(center_x)+x,parseFloat(center_y)+parseFloat(i));
+						p=p+ddx;
+					}
+					else{
+						x=x+1;
+						can.lineTo(parseFloat(center_x)+x,parseFloat(center_y)+i);
+						p=p+ddxy;
+					}
+					can.stroke();
+					if(i>(-ye)){
+						clearInterval(t)
+						t=null;
+					}
+				},50)
+			}
+		}
+
+	}
+
+	function circle(x0,y0,r,lw,color){
+		can.beginPath();
+		can.lineWidth=lw;
+		can.strokeStyle=color;
+		can.moveTo(parseFloat(center_x)+parseFloat(x0),parseFloat(r)+parseFloat(center_y)+parseFloat(y0));
+		//can.moveTo(parseFloat(center_x),parseFloat(center_y)+parseFloat(r));
+
+		var p=1-r;
+		var x=0;
+		var y=r;
+		var t=setInterval(function(){
+			x=x+1;
+			if(p<0){
+				p=p+2*x+1;
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(center_y)+parseFloat(y0)+parseFloat(y));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(center_y)+parseFloat(y0)+parseFloat(y));
+				can.stroke()
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y),parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1));
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y),parseFloat(center_x)+parseFloat(x0)+parseFloat(x));
+				can.stroke()
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y));
+				can.stroke()
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y),parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1));
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y),parseFloat(center_x)+parseFloat(x0)+parseFloat(x));
+				can.stroke()
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y))
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y));
+				can.stroke()
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1))
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x));
+				can.stroke()
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(center_y)+parseFloat(y0)+parseFloat(y));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(center_y)+parseFloat(y0)+parseFloat(y));
+				can.stroke()
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1));
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x));
+				can.stroke()
+			}
+			else{
+				y=y-1;
+				p=p+2*x+1-2*y;
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(center_y)+parseFloat(y0)+parseFloat(y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(center_y)+parseFloat(y0)+parseFloat(y));
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y+1),parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1));
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y),parseFloat(center_x)+parseFloat(x0)+parseFloat(x));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y));
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y+1),parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1));
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y),parseFloat(center_x)+parseFloat(x0)+parseFloat(x));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(center_y)+parseFloat(y0)+parseFloat(-y));
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y+1),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1));
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(-y),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(center_y)+parseFloat(y0)+parseFloat(y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(center_y)+parseFloat(y0)+parseFloat(y));
+
+				can.moveTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y+1),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1));
+				can.lineTo(parseFloat(center_y)+parseFloat(y0)+parseFloat(y),parseFloat(center_x)+parseFloat(x0)+parseFloat(-x));
+				can.stroke();
+			}
+				if (x>y) {
+					clearInterval(t);
+					t=null;
+				}
+
+		},50)
+
+	}
+
+	function ecllipse(x0,y0,rx,ry,lw,color){
+		can.beginPath();
+		can.lineWidth=lw;
+		can.strokeStyle=color;
+		can.moveTo(parseFloat(center_x)+parseFloat(x0),parseFloat(ry)+parseFloat(center_y)+parseFloat(y0));
+		var x=0;
+		var y=ry;
+		var p1=Math.pow(ry,2)-Math.pow(rx,2)*ry+1/4* Math.pow(rx,2);
+		var ry2=Math.pow(ry,2)
+		var dry2=Math.pow(ry,2)*2
+		var rx2=Math.pow(rx,2)
+		var drx2=Math.pow(rx,2)*2
+		var flag=0
+		function draw1(){
+			clearInterval(c);
+			var t=setInterval(function(){
+			x=x+1;
+			if(p1<0){
+				p1=p1+dry2*x+ry2;
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+
+			}
+			else{
+				y=y-1;
+				p1=p1+dry2*x-drx2*y+ry2;
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(y0)+parseFloat(center_y)+parseFloat(y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(y0)+parseFloat(center_y)+parseFloat(y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+
+				can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y+1));
+				can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+			}
+			can.stroke();
+			if((dry2*x)>(drx2*y)){
+				clearInterval(t);
+				t=null;
+				draw2()
+			}
+		},50)
+		}
+		
+		function draw2(){
+			var c=setInterval(function(){
+				var p2=ry2*Math.pow(x+0.5,2)+rx2*Math.pow(y-1,2)-rx2*ry2;
+				y=y-1;
+				if (p2>0) {
+					p2=p2-drx2*y+rx2;
+					can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y+1));
+					can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+
+					can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y+1));
+					can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+
+
+					can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y+1));
+					can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+
+					can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y+1));
+					can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+				}
+				else{
+					x=x+1;
+					p2=p2+dry2*x-drx2*y+rx2;
+					can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x-1),parseFloat(y0)+parseFloat(center_y)+parseFloat(y+1));
+					can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+
+					can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(y0)+parseFloat(center_y)+parseFloat(y+1));
+					can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(y));
+
+					can.moveTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x+1),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y+1));
+					can.lineTo(parseFloat(center_x)+parseFloat(x0)+parseFloat(-x),parseFloat(y0)+parseFloat(center_y)+parseFloat(-y));
+				}
+				can.stroke();
+				if (y<0) {
+					clearInterval(c);
+					c=null;
+				}
+			},50)
+		}
+		draw1();
+		
+	}
+
+	function getColor(){
+		$("#picker").colpick({
+				submit:0,
+			    layout: 'hex',
+				onChange: function(hsb, hex, rgb, el, bySetColor) {
+					color = "#" + hex
+				}
+			});
+		return color;
+	}
+	$(document).ready(function(){
+		coordinate();
+		$('#dda').click(function(){
+			document.getElementById('forms').innerHTML=' '
+			var form=document.createElement('div');
+			form.id='dda_form'
+			form.innerHTML='<label>初始点x坐标 </label>'+
+			'<input type="number" name="x0">'+'<br>'+
+			'<label>初始点y坐标 </label>'+
+			'<input type="number" name="y0">'+'<br>'+
+			'<label>终点x坐标 &nbsp &nbsp</label>'+
+			'<input type="number" name="xe">'+'<br>'+
+			'<label>终点y坐标 &nbsp &nbsp</label>'+
+			'<input type="number" name="ye">'+'<br>'+
+			'<label>选择线宽 &nbsp &nbsp&nbsp</label>'+
+			'<input type="number" name="lw">'+'<br>'+
+			'<label>选择颜色&nbsp&nbsp&nbsp&nbsp&nbsp</label>'+
+			'<button id="picker">color pick</button>'+			'<button id="submit" type="submit">ok</button>'
+			$('#forms').append(form)
+			$("#picker").colpick({
+				submit:0,
+			    layout: 'hex',
+				onChange: function(hsb, hex, rgb, el, bySetColor) {
+					color = "#" + hex
+				}
+			});
+			document.getElementById('dda').disabled=true;
+			document.getElementById('bresenham').disabled=false;
+			document.getElementById('circle').disabled=false;
+			document.getElementById('ecllipse').disabled=false;
+			$('#forms').on("click",'#submit',function(){
+				var dda_form=$('#forms').children('#dda_form');
+				var x_0=dda_form.children("input[name$='x0']").val();
+				var y_0=dda_form.children("input[name$='y0']").val();
+				var x_e=dda_form.children("input[name$='xe']").val();
+				var y_e=dda_form.children("input[name$='ye']").val();
+				var lw=dda_form.children("input[name$='lw']").val();
+				if(x_0==''||y_0==''||x_e==''||y_e==''){
+					alert('输入不能为空哟～')
+				}
+				ddaline(x_0,y_0,x_e,y_e,lw,color);
+				document.getElementById('dda').disabled=false;
+			})
+		})
+
+		$('#bresenham').click(function(){
+			document.getElementById('forms').innerHTML=' '
+			var form=document.createElement('div');
+			form.id='bresenham_form'
+			form.innerHTML='<label>初始点x坐标 </label>'+
+			'<input type="number" name="x0" >'+'<br>'+
+			'<label>初始点y坐标 </label>'+
+			'<input type="number" name="y0">'+'<br>'+
+			'<label>终点x坐标 &nbsp&nbsp </label>'+
+			'<input type="number" name="xe">'+'<br>'+
+			'<label>终点y坐标 &nbsp&nbsp </label>'+
+			'<input type="number" name="ye">'+'<br>'+
+			'<label>选择线宽 &nbsp &nbsp&nbsp</label>'+
+			'<input type="number" name="lw">'+'<br>'+
+			'<label>选择颜色&nbsp&nbsp&nbsp&nbsp&nbsp</label>'+
+			'<button id="picker">color pick</button>'+			'<button id="submit" type="submit">ok</button>'
+			$('#forms').append(form)
+			$("#picker").colpick({
+				submit:0,
+			    layout: 'hex',
+				onChange: function(hsb, hex, rgb, el, bySetColor) {
+					color = "#" + hex
+				}
+			});
+			document.getElementById('bresenham').disabled=true;
+			document.getElementById('dda').disabled=false;
+			document.getElementById('circle').disabled=false;
+			document.getElementById('ecllipse').disabled=false;
+			$('#forms').on("click",'#submit',function(){
+				clear();
+				var form=$('#forms').children('#bresenham_form');
+				var x_0=form.children("input[name$='x0']").val();
+				var y_0=form.children("input[name$='y0']").val();
+				var x_e=form.children("input[name$='xe']").val();
+				var y_e=form.children("input[name$='ye']").val();
+				var linewidth=form.children("input[name$='lw']").val();
+				if(x_0==''||y_0==''||x_e==''||y_e==''){
+					alert('输入不能为空哟～')
+				}
+				bresenham(x_0,y_0,x_e,y_e,linewidth,color);
+				document.getElementById('bresenham').disabled=false;
+			})
+		})
+		$('#circle').click(function(){
+			document.getElementById('forms').innerHTML=' '
+			var form=document.createElement('div');
+			form.id='circle_form'
+			form.innerHTML='<label>圆心x坐标 </label>'+
+			'<input type="number" name="x0">'+'<br>'+
+			'<label>圆心y坐标 </label>'+
+			'<input type="number" name="y0">'+'<br>'+
+			'<label> 半 径 &nbsp &nbsp&nbsp &nbsp</label>'+
+			'<input type="number" name="r">'+'<br>'+
+			'<label>选择线宽 &nbsp</label>'+
+			'<input type="number" name="lw">'+'<br>'+
+			'<label>选择颜色 &nbsp</label>'+
+			'<button id="picker">color pick</button>'+
+			'<button id="submit" type="submit">ok</button>'
+			$('#forms').append(form)
+			$("#picker").colpick({
+				submit:0,
+			    layout: 'hex',
+				onChange: function(hsb, hex, rgb, el, bySetColor) {
+					color = "#" + hex
+				}
+			});
+			document.getElementById('circle').disabled=true;
+			document.getElementById('dda').disabled=false;
+			document.getElementById('bresenham').disabled=false;
+			document.getElementById('ecllipse').disabled=false;
+			$('#forms').on("click",'#submit',function(){
+				clear();
+				var form=$('#forms').children('#circle_form');
+				var x_0=form.children("input[name$='x0']").val();
+				var y_0=form.children("input[name$='y0']").val();
+				var r=form.children("input[name$='r']").val();
+				var lw=form.children("input[name$='lw']").val();	
+				if(x_0==''||y_0==''||r==''){
+					alert('输入不能为空哟～')
+				}
+				circle(x_0,y_0,r,lw,color);
+				document.getElementById('circle').disabled=false;
+			})
+		})
+
+		$('#ecllipse').click(function(){
+			document.getElementById('forms').innerHTML=' '
+			var form=document.createElement('div');
+			form.id='ecllipse_form'
+			form.innerHTML='<label>椭圆中心x坐标 &nbsp</label>'+
+			'<input type="number" name="x0">'+'<br>'+
+			'<label>椭圆中心y坐标 &nbsp</label>'+
+			'<input type="number" name="y0">'+'<br>'+
+			'<label>x轴向半长轴Rx </label>'+
+			'<input type="number" name="rx">'+'<br>'+
+			'<label>y轴向半长轴Ry </label>'+
+			'<input type="number" name="ry">'+'<br>'+
+			'<label>选 择 线 宽 &nbsp &nbsp &nbsp</label>'+
+			'<input type="number" name="lw">'+'<br>'+
+			'<label>选 择 颜 色&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>'+
+			'<button id="picker">color pick</button>'+
+			'<button id="submit" type="submit">ok</button>'
+			$('#forms').append(form)
+			$("#picker").colpick({
+				submit:0,
+				layout:'hex',
+				onChange: function(hsb, hex, rgb, el, bySetColor) {
+					color = "#" + hex
+				}
+			});
+			document.getElementById('ecllipse').disabled=true;
+			document.getElementById('dda').disabled=false;
+			document.getElementById('bresenham').disabled=false;
+			document.getElementById('circle').disabled=false;
+			$('#forms').on("click",'#submit',function(){
+				clear();
+				var form=$('#forms').children('#ecllipse_form');
+				var x_0=form.children("input[name$='x0']").val();
+				var y_0=form.children("input[name$='y0']").val();
+				var rx=form.children("input[name$='rx']").val();
+				var ry=form.children("input[name$='ry']").val();
+				var lw=form.children("input[name$='lw']").val();
+				if(x_0==''||y_0==''||rx==''||ry==''){
+					alert('输入不能为空哟～')
+				}
+				ecllipse(x_0,y_0,rx,ry,lw,color);
+				document.getElementById('ecllipse').disabled=false;
+			})
+		})
+
+  	});	
+</script>
+
+</body>
+</html>
